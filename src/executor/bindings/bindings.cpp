@@ -6,7 +6,7 @@
 #include "src/registration.h"
 
 TORCH_LIBRARY(executor, m) {
-  #ifdef IS_HOPPER
+  #if defined(IS_HOPPER) || defined(IS_BLACKWELL)
   executor::register_aok_gemm_ops(m);
   #endif
   executor::register_silu_ops(m);

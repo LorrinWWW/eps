@@ -106,7 +106,23 @@ struct DispatchAll2AllParams {
 
     CommBuff<T> comm_buff;
 
-    __device__ eps::All2AllParams<T> prepare(int remote_rank);
+    __device__ eps::All2AllParams<T> prepare(int remote_rank) {
+        int local_num_experts = this->num_experts / this->world_size;
+        int recv_start = this->remote_recv_plan[remote_rank];
+        int send_start = this->exclusive_sum[local_num_experts * remote_rank];
+        int send_end = this->exclusive_sum[local_num_experts * (remote_rank + 1)];
+        return eps::All2AllParams<T>{
+            .my_rank = this->my_rank,
+            .remote_rank = remote_rank,
+            .num_ranks_per_node = this->num_ranks_per_node,
+            .world_size = this->world_size,
+            .comm_buff = this->comm_buff,
+            .send_start = send_start,
+            .send_end = send_end,
+            .recv_start = recv_start,
+            .cols = this->cols
+        };
+    }
 };
 
 template<typename T>
@@ -122,7 +138,23 @@ struct CombineAll2AllParams {
 
     CommBuff<T> comm_buff;
 
-    __device__ eps::All2AllParams<T> prepare(int remote_rank);
+    __device__ eps::All2AllParams<T> prepare(int remote_rank) {
+        int local_num_experts = this->num_experts / this->world_size;
+        int recv_start = this->all_gathered[(this->num_experts + 1) * remote_rank + this->my_rank * local_num_experts];
+        int send_start = this->local_send_plan[remote_rank];
+        int send_end = this->local_send_plan[remote_rank + 1];
+        return eps::All2AllParams<T>{
+            .my_rank = this->my_rank,
+            .remote_rank = remote_rank,
+            .num_ranks_per_node = this->num_ranks_per_node,
+            .world_size = this->world_size,
+            .comm_buff = this->comm_buff,
+            .send_start = send_start,
+            .send_end = send_end,
+            .recv_start = recv_start,
+            .cols = this->cols
+        };
+    }
 };
 
 }

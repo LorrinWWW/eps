@@ -1,9 +1,10 @@
 file(GLOB files *.cu)
 
 set(LIB_NAME "quant")
-add_library(${LIB_NAME} SHARED ${files})
+add_library(${LIB_NAME} ${EPS_INTERNAL_LIB_TYPE} ${files})
+set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 target_include_directories(${LIB_NAME} PRIVATE ${PROJECT_SOURCE_DIR} ${repo-mscclpp_SOURCE_DIR}/include)
-target_link_libraries(${LIB_NAME} mscclpp)
+target_link_libraries(${LIB_NAME} ${EPS_MSCCLPP_TARGET})
 # target_compile_options(${LIB_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--ptxas-options=-v>)
 target_compile_options(${LIB_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr --keep>)
 # target_compile_options(${LIB_NAME} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)

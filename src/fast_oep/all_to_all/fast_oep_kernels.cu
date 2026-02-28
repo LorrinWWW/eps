@@ -144,44 +144,6 @@ void allGatherPlan(AllGatheredPlan p, cudaStream_t stream) {
   planKernel<<<1, 64, 0, stream>>>(p);
 }
 
-template <typename T>
-__device__ eps::All2AllParams<T> DispatchAll2AllParams<T>::prepare(int remote_rank) {
-    int recv_start = this->remote_recv_plan[remote_rank];
-    int send_start = this->exclusive_sum[remote_rank];
-    int send_end = this->exclusive_sum[remote_rank + 1];
-
-    return All2AllParams<T>{
-      .my_rank = this->my_rank,
-      .remote_rank = remote_rank,
-      .num_ranks_per_node = this->num_ranks_per_node,
-      .world_size = this->world_size,
-      .comm_buff = this->comm_buff,
-      .send_start = send_start,
-      .send_end = send_end,
-      .recv_start = recv_start,
-      .cols = this->cols
-    };
-}
-
-template <typename T>
-__device__ eps::All2AllParams<T> CombineAll2AllParams<T>::prepare(int remote_rank) {
-    int recv_start = this->all_gathered[(this->world_size + 1) * remote_rank + this->my_rank];
-    int send_start = this->local_send_plan[remote_rank];
-    int send_end = this->local_send_plan[remote_rank + 1];
-
-    return All2AllParams<T>{
-      .my_rank = this->my_rank,
-      .remote_rank = remote_rank,
-      .num_ranks_per_node = this->num_ranks_per_node,
-      .world_size = this->world_size,
-      .comm_buff = this->comm_buff,
-      .send_start = send_start,
-      .send_end = send_end,
-      .recv_start = recv_start,
-      .cols = this->cols
-    };
-}
-
 template<typename T, int BLOCK_SIZE, int64_t EMBED_DIM>
 __global__ void lookupKernel(LookupParams<T> p) {
   using VectorizedType = VectorizedType<T>;

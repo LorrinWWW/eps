@@ -3,19 +3,20 @@ file(GLOB files
     activations.cu
 )
 
-if(SM_NUM STREQUAL "90a")
+if(SM_NUM STREQUAL "90a" OR SM_NUM STREQUAL "100a")
     list(APPEND files aok_grouped_gemm.cu)
 endif()
 
 
 set(LIB_NAME "executor")
-add_library(${LIB_NAME} SHARED ${files})
+add_library(${LIB_NAME} ${EPS_INTERNAL_LIB_TYPE} ${files})
+set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 target_include_directories(${LIB_NAME} PUBLIC ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/3rdparty)
 target_include_directories(${LIB_NAME} PUBLIC ${CUTLASS_DIR}/include)
 
 set(deps common eps_aok_grouped_gemm)
 
-if(SM_NUM STREQUAL "90a")
+if(SM_NUM STREQUAL "90a" OR SM_NUM STREQUAL "100a")
     target_include_directories(${LIB_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/gemm)
     target_link_directories(${LIB_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/gemm/aok_grouped_gemm/include)
 endif()
@@ -29,7 +30,7 @@ set(binding_files
     bindings/silu_ops.cu
     bindings/bindings.cpp
 )
-if(SM_NUM STREQUAL "90a")
+if(SM_NUM STREQUAL "90a" OR SM_NUM STREQUAL "100a")
     list(APPEND binding_files bindings/aok_grouped_gemm_ops.cu)
 endif()
 add_library(executor_ SHARED ${binding_files})

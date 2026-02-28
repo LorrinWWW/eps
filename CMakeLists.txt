@@ -12,12 +12,25 @@ CUDA_SELECT_NVCC_ARCH_FLAGS(NVCC_FLAGS_AUTO)
 string(REGEX MATCH "compute_([0-9]+)" _ ${NVCC_FLAGS_AUTO})
 set(COMPUTE_CAPABILITY "${CMAKE_MATCH_1}")
 
-set(SM_NUM "90a")
+set(SM_NUM "90a" CACHE STRING "Target SM architecture (e.g. 90a, 100a)")
+if(DEFINED ENV{EPS_SM_NUM} AND NOT "$ENV{EPS_SM_NUM}" STREQUAL "")
+  set(SM_NUM "$ENV{EPS_SM_NUM}" CACHE STRING "Target SM architecture (e.g. 90a, 100a)" FORCE)
+endif()
 if(SM_NUM STREQUAL "90a")
   add_definitions(-DIS_HOPPER)
+elseif(SM_NUM STREQUAL "100a")
+  add_definitions(-DIS_BLACKWELL)
 endif()
 
 option(WITH_NVSHMEM "Build with nvshmem" OFF)
+option(EPS_STATIC_INTERNAL_LIBS "Statically link internal libs (mscclpp, common, quant, executor)" OFF)
+if(EPS_STATIC_INTERNAL_LIBS)
+    set(EPS_INTERNAL_LIB_TYPE STATIC)
+    set(EPS_MSCCLPP_TARGET mscclpp_static)
+else()
+    set(EPS_INTERNAL_LIB_TYPE SHARED)
+    set(EPS_MSCCLPP_TARGET mscclpp)
+endif()
 
 # Print the detected SM_NUM
 message(STATUS "Detected SM_NUM: ${SM_NUM}")
@@ -51,7 +64,13 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/meituan-longcat/mscclpp.git
   GIT_TAG        feature/eps
 )
+set(MSCCLPP_BUILD_TESTS OFF CACHE BOOL "Disable mscclpp tests" FORCE)
 FetchContent_MakeAvailable(repo-mscclpp)
+# Fix stack buffer overflow in mscclpp bootstrap: MAX_IF_NAME_SIZE (16) is too
+# small for SocketToString() output which writes a full IP<port> string.
+execute_process(COMMAND sed -i "s/MAX_IF_NAME_SIZE 16/MAX_IF_NAME_SIZE 32/g"
+    ${repo-mscclpp_SOURCE_DIR}/src/include/socket.h
+    ${repo-mscclpp_SOURCE_DIR}/src/include/endpoint.hpp)
 set(repo-mscclpp_SOURCE_DIR ${repo-mscclpp_SOURCE_DIR} CACHE INTERNAL "")
 
 find_package(Python3 COMPONENTS Interpreter Development)
@@ -80,6 +99,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 
 # === Dependencies ===
 include(FetchContent)

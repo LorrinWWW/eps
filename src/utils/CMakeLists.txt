@@ -10,7 +10,7 @@ add_library(${LIB_NAME} SHARED
 )
 
 target_link_libraries(${LIB_NAME} PUBLIC
-    mscclpp
+    ${EPS_MSCCLPP_TARGET}
     common
     torch::py_limited
     Python::Module

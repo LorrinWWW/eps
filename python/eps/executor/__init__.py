@@ -10,5 +10,6 @@ arch_name = torch.cuda.get_device_name(device)
 
 # Hopper 架构的计算能力为 9.0（sm_90 或 sm_90a）
 IS_HOPPER = (capability == (9, 0))
-if IS_HOPPER:
+IS_BLACKWELL = (capability[0] == 10)
+if IS_HOPPER or IS_BLACKWELL:
     from .aok_grouped_gemm import AokGroupedGemm as AokGroupedGemm

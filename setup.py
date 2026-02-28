@@ -33,7 +33,11 @@ class build_py(_build_py):
             cmake_args.extend(extra_args.split())
 
         env = os.environ.copy()
-        env.setdefault("TORCH_CUDA_ARCH_LIST", "9.0a")
+        arch_list = env.setdefault("TORCH_CUDA_ARCH_LIST", "9.0a;10.0a")
+        if "10.0a" in arch_list or "10.0" in arch_list:
+            env.setdefault("EPS_SM_NUM", "100a")
+        elif "9.0a" in arch_list or "9.0" in arch_list:
+            env.setdefault("EPS_SM_NUM", "90a")
 
         subprocess.check_call(
             ["cmake", "-S", str(root), "-B", str(build_dir)] + cmake_args,

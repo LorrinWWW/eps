@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include "hopper_grouped_gemm_kernel.h"
 
 namespace aok {
